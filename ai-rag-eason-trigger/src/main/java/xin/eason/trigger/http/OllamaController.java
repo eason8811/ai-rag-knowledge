@@ -45,4 +45,6 @@ public class OllamaController implements IAiService {
     public Flux<ChatResponse> generateStream(String model, String message) {
         return ollamaChatClient.stream(new Prompt(message, OllamaOptions.create().withModel(model)));
     }
+
+
 }
