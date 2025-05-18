@@ -9,9 +9,7 @@ import org.springframework.ai.ollama.OllamaEmbeddingClient;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.PgVectorStore;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import xin.eason.api.IRagService;
 import xin.eason.api.response.Result;
@@ -21,7 +19,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/api/v1/rag/")
+@RequestMapping("/api/v1/rag")
 @RequiredArgsConstructor
 public class RagController implements IRagService {
 
@@ -51,6 +49,7 @@ public class RagController implements IRagService {
      * @return Tag 标签列表
      */
     @Override
+    @GetMapping("/query_rag_tag_list")
     public Result<List<String>> queryRagTagList() {
         log.info("正在查询现存的 RAG Tag 列表");
         RList<String> ragTagRList = redissonClient.getList("ragTag");
@@ -66,6 +65,7 @@ public class RagController implements IRagService {
      * @return 上传
      */
     @Override
+    @PostMapping(path = "file/upload", headers = "content-type=multipart/form-data")
     public Result<String> uploadRagFiles(String ragTag, List<MultipartFile> files) {
         log.info("开始上传知识库文件");
         for (MultipartFile file : files) {
@@ -75,6 +75,11 @@ public class RagController implements IRagService {
             List<Document> splitDocuments = tokenTextSplitter.apply(documents);
             splitDocuments.forEach(document -> document.getMetadata().put("knowledge", ragTag));
             pgVectorStore.add(splitDocuments);
+
+            RList<Object> ragTagRList = redissonClient.getList("ragTag");
+            if (!ragTagRList.contains(ragTag)) {
+                ragTagRList.add(ragTag);
+            }
         }
         log.info("上传已完成!");
         return Result.success("上传成功!");
