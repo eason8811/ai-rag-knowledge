@@ -23,4 +23,13 @@ public interface IRagService {
      * @return 上传
      */
     Result<String> uploadRagFiles(String ragTag, List<MultipartFile> files);
+
+    /**
+     * 根据传入的仓库 URL 和用户名, Token 克隆 Git 仓库, 然后上传知识库
+     * @param repositoryUrl 仓库 URL
+     * @param userName 用户名
+     * @param token 用户 Token
+     * @return 分析结果
+     */
+    Result<String> analyseGitRepository(String repositoryUrl, String userName, String token);
 }
