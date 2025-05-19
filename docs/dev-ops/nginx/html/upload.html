@@ -130,7 +130,7 @@
 
        axios.post('http://localhost:8080/api/v1/rag/file/upload', formData)
          .then(response => {
-           if (response.data.code === '0000') {
+           if (response.data.code === 1) {
              // 成功提示并关闭窗口
              setTimeout(() => {
                alert('上传成功，窗口即将关闭');
