@@ -117,6 +117,7 @@ public class RagController implements IRagService {
             FileUtils.deleteDirectory(localRepositoryFile);
         } catch (IOException e) {
             log.error("清理本地仓库文件夹错误! 目录位置: {}", localRepositoryFile.getPath(), e);
+            return Result.error("清理本地仓库文件夹错误! 目录位置: " + localRepositoryFile.getPath());
         }
         try (Git git = Git.cloneRepository()
                 .setURI(repositoryUrl)
@@ -126,6 +127,7 @@ public class RagController implements IRagService {
             log.info("克隆完毕! 仓库 URL: {}", repositoryUrl);
         } catch (GitAPIException e) {
             log.error("连接 GitHub 仓库失败, URL: {}", repositoryUrl, e);
+            return Result.error("连接 GitHub 仓库失败, URL: " + repositoryUrl);
         }
 
         // 遍历 临时本地仓库文件夹 中的文件, 并上传知识库
@@ -155,6 +157,7 @@ public class RagController implements IRagService {
 
         } catch (IOException e) {
             log.error("遍历本地临时文件并上传知识库时出错!", e);
+            return Result.error("遍历本地临时文件并上传知识库时出错!");
         }
         return Result.success("代码仓库 \"" + repositoryName + "\" 已经上传到知识库");
     }
