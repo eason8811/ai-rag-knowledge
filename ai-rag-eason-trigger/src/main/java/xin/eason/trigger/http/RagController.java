@@ -159,8 +159,8 @@ public class RagController implements IRagService {
         return Result.success("代码仓库 \"" + repositoryName + "\" 已经上传到知识库");
     }
 
-    private String getRepositoryName(String repositoryUri) {
-        String[] uriSplitArray = repositoryUri.split("/");
+    private String getRepositoryName(String repositoryUrl) {
+        String[] uriSplitArray = repositoryUrl.split("/");
         return uriSplitArray[uriSplitArray.length - 1].replace(".git", "");
     }
 }

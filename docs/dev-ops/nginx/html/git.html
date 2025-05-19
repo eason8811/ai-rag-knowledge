@@ -120,7 +120,7 @@
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `repositoryUri=${encodeURIComponent(repoUrl)}&userName=${encodeURIComponent(userName)}&token=${encodeURIComponent(token)}`
+            body: `repositoryUrl=${encodeURIComponent(repoUrl)}&userName=${encodeURIComponent(userName)}&token=${encodeURIComponent(token)}`
         })
         .then(response => response.json())
         .then(data => {
