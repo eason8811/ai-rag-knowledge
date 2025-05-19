@@ -10,7 +10,8 @@ public interface IAiService {
 
     /**
      * 根据消息生成响应结果
-     * @param model 需要使用的模型
+     *
+     * @param model   需要使用的模型
      * @param message 发送的消息
      * @return 返回 Spring AI 对话响应对象 ( 非流式传输 )
      */
@@ -18,9 +19,20 @@ public interface IAiService {
 
     /**
      * 根据消息生成响应结果
-     * @param model 需要使用的模型
+     *
+     * @param model   需要使用的模型
      * @param message 发送的消息
      * @return 返回 Spring AI 对话响应对象 ( 流式传输 )
      */
     Flux<ChatResponse> generateStream(String model, String message);
+
+    /**
+     * 根据选定的 知识库Tag 流式生成消息的响应结果
+     *
+     * @param model   需要使用的模型
+     * @param ragTag  知识库 Tag
+     * @param message 发送的消息
+     * @return 返回 Spring AI 对话响应对象 ( 流式传输 )
+     */
+    Flux<ChatResponse> generateStreamWithRag(String model, String ragTag, String message);
 }

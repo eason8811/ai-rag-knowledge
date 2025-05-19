@@ -86,9 +86,10 @@ public class RagController implements IRagService {
             pgVectorStore.add(splitDocuments);
 
             RList<Object> ragTagRList = redissonClient.getList("ragTag");
-            if (!ragTagRList.contains(ragTag)) {
-                ragTagRList.add(ragTag);
+            if (ragTagRList.contains(ragTag)) {
+                return Result.error("该 RagTag 已经存在!");
             }
+            ragTagRList.add(ragTag);
         }
         log.info("上传已完成!");
         return Result.success("上传成功!");
@@ -105,13 +106,18 @@ public class RagController implements IRagService {
     @Override
     @PostMapping("/analyze_git_repository")
     public Result<String> analyseGitRepository(String repositoryUrl, String userName, String token) {
+        String repositoryName = getRepositoryName(repositoryUrl);
+        if (redissonClient.getList("knowledge").contains(repositoryName))
+            return Result.error("代码仓库已存在在知识库中!");
+
         String tempCloneRepositoryPath = "./temp-clone-repository";
         File localRepositoryFile = new File(tempCloneRepositoryPath);
         try {
             log.info("正在清理临时本地仓库文件夹...");
             FileUtils.deleteDirectory(localRepositoryFile);
         } catch (IOException e) {
-            log.error("清理本地仓库文件夹错误! 目录位置: {}", localRepositoryFile.getPath(), e);
+            log.error("清理本地仓库文件夹错误! 目录位置: {}", localRepositoryFile.toPath().toAbsolutePath().normalize(), e);
+            return Result.error("清理本地仓库文件夹错误! 目录位置: " + localRepositoryFile.getPath());
         }
         try (Git git = Git.cloneRepository()
                 .setURI(repositoryUrl)
@@ -121,19 +127,19 @@ public class RagController implements IRagService {
             log.info("克隆完毕! 仓库 URL: {}", repositoryUrl);
         } catch (GitAPIException e) {
             log.error("连接 GitHub 仓库失败, URL: {}", repositoryUrl, e);
+            return Result.error("连接 GitHub 仓库失败, URL: " + repositoryUrl);
         }
 
         // 遍历 临时本地仓库文件夹 中的文件, 并上传知识库
         try {
-            Path gitHandlerPath = Paths.get(tempCloneRepositoryPath).resolve(".git");
-            String repositoryName = getRepositoryName(repositoryUrl);
+            Path gitHandlerPath = Paths.get(tempCloneRepositoryPath).toAbsolutePath().resolve(".git");
             Files.walkFileTree(Paths.get(localRepositoryFile.toURI()), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    log.info("正在上传知识库文件 {} ...", file);
                     FileVisitResult originalSuccessResult = super.visitFile(file, attrs);
-                    if (file.startsWith(gitHandlerPath))
+                    if (file.startsWith(gitHandlerPath) || file.toString().endsWith(".png") || file.toString().endsWith(".jpg") || file.toString().endsWith(".jpeg") || file.toString().endsWith(".sh"))
                         return originalSuccessResult;
+                    log.info("正在上传知识库文件 {} ...", file.toAbsolutePath().normalize());
                     TikaDocumentReader reader = new TikaDocumentReader(new PathResource(file));
                     List<Document> documentList = reader.get();
                     List<Document> splitDocumentList = tokenTextSplitter.apply(documentList);
@@ -144,18 +150,20 @@ public class RagController implements IRagService {
             });
 
             // 上传完成后上报 Redis
-            RList<String> knowledgeRlist = redissonClient.getList("knowledge");
+            RList<String> knowledgeRlist = redissonClient.getList("ragTag");
             if (knowledgeRlist.contains(repositoryName))
                 return Result.error("代码仓库已存在在知识库中!");
+            knowledgeRlist.add(repositoryName);
 
         } catch (IOException e) {
             log.error("遍历本地临时文件并上传知识库时出错!", e);
+            return Result.error("遍历本地临时文件并上传知识库时出错!");
         }
-        return Result.success("代码仓库 \"" + getRepositoryName(repositoryUrl) + "\" 已经上传到知识库");
+        return Result.success("代码仓库 \"" + repositoryName + "\" 已经上传到知识库");
     }
 
-    private String getRepositoryName(String repositoryUri) {
-        String[] uriSplitArray = repositoryUri.split("/");
+    private String getRepositoryName(String repositoryUrl) {
+        String[] uriSplitArray = repositoryUrl.split("/");
         return uriSplitArray[uriSplitArray.length - 1].replace(".git", "");
     }
 }
