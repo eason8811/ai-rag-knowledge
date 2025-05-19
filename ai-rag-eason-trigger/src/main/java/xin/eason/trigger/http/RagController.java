@@ -87,8 +87,9 @@ public class RagController implements IRagService {
 
             RList<Object> ragTagRList = redissonClient.getList("ragTag");
             if (!ragTagRList.contains(ragTag)) {
-                ragTagRList.add(ragTag);
+                return Result.error("该 RagTag 已经存在!");
             }
+            ragTagRList.add(ragTag);
         }
         log.info("上传已完成!");
         return Result.success("上传成功!");
@@ -105,6 +106,10 @@ public class RagController implements IRagService {
     @Override
     @PostMapping("/analyze_git_repository")
     public Result<String> analyseGitRepository(String repositoryUrl, String userName, String token) {
+        String repositoryName = getRepositoryName(repositoryUrl);
+        if (redissonClient.getList("knowledge").contains(repositoryName))
+            return Result.error("代码仓库已存在在知识库中!");
+
         String tempCloneRepositoryPath = "./temp-clone-repository";
         File localRepositoryFile = new File(tempCloneRepositoryPath);
         try {
@@ -126,7 +131,6 @@ public class RagController implements IRagService {
         // 遍历 临时本地仓库文件夹 中的文件, 并上传知识库
         try {
             Path gitHandlerPath = Paths.get(tempCloneRepositoryPath).resolve(".git");
-            String repositoryName = getRepositoryName(repositoryUrl);
             Files.walkFileTree(Paths.get(localRepositoryFile.toURI()), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -147,11 +151,12 @@ public class RagController implements IRagService {
             RList<String> knowledgeRlist = redissonClient.getList("knowledge");
             if (knowledgeRlist.contains(repositoryName))
                 return Result.error("代码仓库已存在在知识库中!");
+            knowledgeRlist.add(repositoryName);
 
         } catch (IOException e) {
             log.error("遍历本地临时文件并上传知识库时出错!", e);
         }
-        return Result.success("代码仓库 \"" + getRepositoryName(repositoryUrl) + "\" 已经上传到知识库");
+        return Result.success("代码仓库 \"" + repositoryName + "\" 已经上传到知识库");
     }
 
     private String getRepositoryName(String repositoryUri) {
