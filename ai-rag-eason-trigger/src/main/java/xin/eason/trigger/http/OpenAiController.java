@@ -1,6 +1,7 @@
 package xin.eason.trigger.http;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @CrossOrigin("*")
 @RequestMapping("/api/v1/openai")
@@ -62,6 +64,7 @@ public class OpenAiController implements IAiService {
     @Override
     @GetMapping("/generate_stream")
     public Flux<ChatResponse> generateStream(String model, String message) {
+        log.info("正在与 {} 对话...  用户信息为: {}", model, message);
         return openAiChatClient.stream(new Prompt(message, OpenAiChatOptions.builder().withModel(model).build()));
     }
 

@@ -86,7 +86,7 @@ public class RagController implements IRagService {
             pgVectorStore.add(splitDocuments);
 
             RList<Object> ragTagRList = redissonClient.getList("ragTag");
-            if (!ragTagRList.contains(ragTag)) {
+            if (ragTagRList.contains(ragTag)) {
                 return Result.error("该 RagTag 已经存在!");
             }
             ragTagRList.add(ragTag);

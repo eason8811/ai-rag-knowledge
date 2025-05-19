@@ -34,8 +34,8 @@ spring:
           num-batch: 512
         model: nomic-embed-text
     openai:
-      base-url: https://pro-share-aws-api.zcyai.com/
-      api-key: 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
+      base-url: https://apis.itedus.cn
+      api-key: sk-V1DuQ2tnKY0VnCmK1a464cEc33F94aF4A0EbB4153453E312
       embedding-model: text-embedding-ada-002
     rag:
       embed: nomic-embed-text # nomic-embed-text, text-embedding-ada-002
