@@ -70,7 +70,7 @@ public class OllamaConfig {
      */
     @Bean
     @ConditionalOnProperty(prefix = "spring.ai.rag", name = "embed", havingValue = "nomic-embed-text", matchIfMissing = true)
-    public SimpleVectorStore simpleVectorStore(OllamaApi ollamaApi) {
+    public SimpleVectorStore simpleVectorStoreOllamaAi(OllamaApi ollamaApi) {
         OllamaEmbeddingClient ollamaEmbeddingClient = new OllamaEmbeddingClient(ollamaApi);
         ollamaEmbeddingClient.withDefaultOptions(OllamaOptions.create().withModel("nomic-embed-text"));
         return new SimpleVectorStore(ollamaEmbeddingClient);
@@ -84,7 +84,7 @@ public class OllamaConfig {
      */
     @Bean
     @ConditionalOnProperty(prefix = "spring.ai.rag", name = "embed", havingValue = "text-embedding-ada-002")
-    public SimpleVectorStore simpleVectorStore(OpenAiApi openAiApi) {
+    public SimpleVectorStore simpleVectorStoreOpenAi(OpenAiApi openAiApi) {
         OpenAiEmbeddingClient openAiEmbeddingClient = new OpenAiEmbeddingClient(openAiApi);
         return new SimpleVectorStore(openAiEmbeddingClient);
     }
@@ -98,7 +98,7 @@ public class OllamaConfig {
      */
     @Bean
     @ConditionalOnProperty(prefix = "spring.ai.rag", name = "embed", havingValue = "nomic-embed-text", matchIfMissing = true)
-    public PgVectorStore pgVectorStore(OllamaApi ollamaApi, JdbcTemplate jdbcTemplate) {
+    public PgVectorStore pgVectorStoreOllamaAi(OllamaApi ollamaApi, JdbcTemplate jdbcTemplate) {
         OllamaEmbeddingClient ollamaEmbeddingClient = new OllamaEmbeddingClient(ollamaApi);
         ollamaEmbeddingClient.withDefaultOptions(OllamaOptions.create().withModel("nomic-embed-text"));
         return new PgVectorStore(jdbcTemplate, ollamaEmbeddingClient);
@@ -113,7 +113,7 @@ public class OllamaConfig {
      */
     @Bean
     @ConditionalOnProperty(prefix = "spring.ai.rag", name = "embed", havingValue = "text-embedding-ada-002")
-    public PgVectorStore pgVectorStore(OpenAiApi openAiApi, JdbcTemplate jdbcTemplate) {
+    public PgVectorStore pgVectorStoreOpenAi(OpenAiApi openAiApi, JdbcTemplate jdbcTemplate) {
         OpenAiEmbeddingClient openAiEmbeddingClient = new OpenAiEmbeddingClient(openAiApi);
         return new PgVectorStore(jdbcTemplate, openAiEmbeddingClient);
     }
