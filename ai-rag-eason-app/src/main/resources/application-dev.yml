@@ -35,10 +35,10 @@ spring:
         model: nomic-embed-text
     openai:
       base-url: https://pro-share-aws-api.zcyai.com/
-      api-key: sk-eEyfxptPgbfXd3Z164260740E0494161Bd8**找小傅哥申请
+      api-key: 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
       embedding-model: text-embedding-ada-002
     rag:
-      embed: nomic-embed-text #nomic-embed-text、text-embedding-ada-002
+      embed: nomic-embed-text # nomic-embed-text, text-embedding-ada-002
 
 
 # Redis
