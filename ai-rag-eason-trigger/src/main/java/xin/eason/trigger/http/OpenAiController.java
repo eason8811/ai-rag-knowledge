@@ -86,7 +86,7 @@ public class OpenAiController implements IAiService {
                 DOCUMENTS:
                     {documents}
                 """;
-        SearchRequest searchRequest = SearchRequest.query(message).withTopK(10).withFilterExpression("knowledge == '" + ragTag + "'");
+        SearchRequest searchRequest = SearchRequest.query(message).withTopK(31).withFilterExpression("knowledge == '" + ragTag + "'");
         List<Document> documents = pgVectorStore.similaritySearch(searchRequest);
         String documentString = documents.stream().map(Document::getContent).collect(Collectors.joining());
         Message systemMsg = new SystemPromptTemplate(SYSTEM_PROMPT).createMessage(Map.of("documents", documentString));

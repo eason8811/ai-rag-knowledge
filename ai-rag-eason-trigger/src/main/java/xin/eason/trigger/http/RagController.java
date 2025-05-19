@@ -116,7 +116,7 @@ public class RagController implements IRagService {
             log.info("正在清理临时本地仓库文件夹...");
             FileUtils.deleteDirectory(localRepositoryFile);
         } catch (IOException e) {
-            log.error("清理本地仓库文件夹错误! 目录位置: {}", localRepositoryFile.getPath(), e);
+            log.error("清理本地仓库文件夹错误! 目录位置: {}", localRepositoryFile.toPath().toAbsolutePath().normalize(), e);
             return Result.error("清理本地仓库文件夹错误! 目录位置: " + localRepositoryFile.getPath());
         }
         try (Git git = Git.cloneRepository()
@@ -132,14 +132,14 @@ public class RagController implements IRagService {
 
         // 遍历 临时本地仓库文件夹 中的文件, 并上传知识库
         try {
-            Path gitHandlerPath = Paths.get(tempCloneRepositoryPath).resolve(".git");
+            Path gitHandlerPath = Paths.get(tempCloneRepositoryPath).toAbsolutePath().resolve(".git");
             Files.walkFileTree(Paths.get(localRepositoryFile.toURI()), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    log.info("正在上传知识库文件 {} ...", file);
                     FileVisitResult originalSuccessResult = super.visitFile(file, attrs);
-                    if (file.startsWith(gitHandlerPath))
+                    if (file.startsWith(gitHandlerPath) || file.toString().endsWith(".png") || file.toString().endsWith(".jpg") || file.toString().endsWith(".jpeg") || file.toString().endsWith(".sh"))
                         return originalSuccessResult;
+                    log.info("正在上传知识库文件 {} ...", file.toAbsolutePath().normalize());
                     TikaDocumentReader reader = new TikaDocumentReader(new PathResource(file));
                     List<Document> documentList = reader.get();
                     List<Document> splitDocumentList = tokenTextSplitter.apply(documentList);
@@ -150,7 +150,7 @@ public class RagController implements IRagService {
             });
 
             // 上传完成后上报 Redis
-            RList<String> knowledgeRlist = redissonClient.getList("knowledge");
+            RList<String> knowledgeRlist = redissonClient.getList("ragTag");
             if (knowledgeRlist.contains(repositoryName))
                 return Result.error("代码仓库已存在在知识库中!");
             knowledgeRlist.add(repositoryName);
