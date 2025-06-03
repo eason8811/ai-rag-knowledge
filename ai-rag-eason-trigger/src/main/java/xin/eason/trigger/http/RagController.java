@@ -1,5 +1,7 @@
 package xin.eason.trigger.http;
 
+import dev.langchain4j.data.document.DocumentSplitter;
+import dev.langchain4j.data.segment.TextSegment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -11,7 +13,6 @@ import org.redisson.api.RedissonClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.ollama.OllamaEmbeddingClient;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.PgVectorStore;
 import org.springframework.core.io.PathResource;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -33,9 +35,9 @@ import java.util.List;
 public class RagController implements IRagService {
 
     /**
-     * Token 文本分割器
+     * 文本分割器
      */
-    private final TokenTextSplitter tokenTextSplitter;
+    private final DocumentSplitter documentSplitter;
 
     /**
      * Ollama 嵌入客户端
@@ -81,7 +83,19 @@ public class RagController implements IRagService {
             log.info("正在上传 {}...", file.getOriginalFilename());
             TikaDocumentReader reader = new TikaDocumentReader(file.getResource());
             List<Document> documents = reader.get();
-            List<Document> splitDocuments = tokenTextSplitter.apply(documents);
+            List<dev.langchain4j.data.document.Document> langChainDocuments = new ArrayList<>();
+
+            // 将 Spring AI 的 Document 转换为 langChain4j 的 Document
+            for (Document document : documents)
+                langChainDocuments.add(new dev.langchain4j.data.document.Document(document.getContent()));
+
+            List<TextSegment> textSegmentList = documentSplitter.splitAll(langChainDocuments);
+            List<Document> splitDocuments = new ArrayList<>();
+
+            // 将 DocumentBySentenceSplitter 分片器分片的结果 TextSegment 的列表转换回 Spring AI 的 Document
+            for (TextSegment textSegment : textSegmentList)
+                splitDocuments.add(new Document(textSegment.text()));
+
             splitDocuments.forEach(document -> document.getMetadata().put("knowledge", ragTag));
             pgVectorStore.add(splitDocuments);
 
@@ -142,7 +156,20 @@ public class RagController implements IRagService {
                     log.info("正在上传知识库文件 {} ...", file.toAbsolutePath().normalize());
                     TikaDocumentReader reader = new TikaDocumentReader(new PathResource(file));
                     List<Document> documentList = reader.get();
-                    List<Document> splitDocumentList = tokenTextSplitter.apply(documentList);
+                    List<Document> documents = reader.get();
+                    List<dev.langchain4j.data.document.Document> langChainDocuments = new ArrayList<>();
+
+                    // 将 Spring AI 的 Document 转换为 langChain4j 的 Document
+                    for (Document document : documents)
+                        langChainDocuments.add(new dev.langchain4j.data.document.Document(document.getContent()));
+
+                    List<TextSegment> textSegmentList = documentSplitter.splitAll(langChainDocuments);
+                    List<Document> splitDocumentList = new ArrayList<>();
+
+                    // 将 DocumentBySentenceSplitter 分片器分片的结果 TextSegment 的列表转换回 Spring AI 的 Document
+                    for (TextSegment textSegment : textSegmentList)
+                        splitDocumentList.add(new Document(textSegment.text()));
+
                     splitDocumentList.forEach(document -> document.getMetadata().put("knowledge", repositoryName));
                     pgVectorStore.add(splitDocumentList);
                     return originalSuccessResult;

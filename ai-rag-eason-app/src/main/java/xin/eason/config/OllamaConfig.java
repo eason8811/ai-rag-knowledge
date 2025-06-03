@@ -1,5 +1,9 @@
 package xin.eason.config;
 
+import dev.langchain4j.data.document.DocumentSplitter;
+import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
+import dev.langchain4j.data.document.splitter.DocumentByWordSplitter;
+import dev.langchain4j.data.segment.TextSegment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.ollama.OllamaChatClient;
 import org.springframework.ai.ollama.OllamaEmbeddingClient;
@@ -7,6 +11,7 @@ import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.openai.OpenAiEmbeddingClient;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.PgVectorStore;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
@@ -53,13 +58,13 @@ public class OllamaConfig {
     }
 
     /**
-     * 注入 Token 文本分割器对象
+     * 注入 文本分割器对象
      *
-     * @return Token 文本分割器 Bean
+     * @return 文本分割器 Bean
      */
     @Bean
-    public TokenTextSplitter textSplitter() {
-        return new TokenTextSplitter();
+    public DocumentSplitter textSegment() {
+        return new DocumentBySentenceSplitter(1000, 200);
     }
 
     /**

@@ -1,6 +1,7 @@
 package xin.eason.trigger.http;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.ChatClient;
 import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
